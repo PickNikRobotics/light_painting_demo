@@ -38,10 +38,10 @@ find_package(ament_cmake REQUIRED)
 # target_compile_options(my_node PRIVATE -Wall -Wextra)
 
 # Export targets
-ament_export_targets(export_${PROJECT_NAME} HAS_LIBRARY_TARGET)
+# ament_export_targets(export_${PROJECT_NAME} HAS_LIBRARY_TARGET)
 
 # Export dependencies to downstream packages
-ament_export_dependencies(${THIS_PACKAGE_INCLUDE_DEPENDS})
+# ament_export_dependencies(${THIS_PACKAGE_INCLUDE_DEPENDS})
 
 # Install Libraries
 # install(
@@ -72,7 +72,7 @@ install(
 install(
   DIRECTORY
     launch
-    config
+#    config
   DESTINATION share/${PROJECT_NAME}
 )
 
