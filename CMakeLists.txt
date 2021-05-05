@@ -8,17 +8,28 @@ endif()
 
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# Place build_depends here
 find_package(ament_cmake REQUIRED)
-# find_package(<build_depend_pkg> REQUIRED)
+find_package(rclcpp REQUIRED)
 
-# set(THIS_PACKAGE_INCLUDE_DEPENDS <build_depend_pkg>)
+# Support new yaml-cpp API.
+find_package(PkgConfig)
+pkg_check_modules(YAMLCPP REQUIRED yaml-cpp>=0.5)
+include_directories(SYSTEM ${YAMLCPP_INCLUDE_DIRS})
+
+
+set(THIS_PACKAGE_INCLUDE_DEPENDS
+  rclcpp
+)
 
 add_library(parse_image_waypoints SHARED src/parse_image_waypoints.cpp)
-
-# add_executable(my_node src/my_node.cpp)
-
 target_include_directories(parse_image_waypoints PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>
+)
+
+add_executable(waypoint_parsing_demo src/waypoint_parsing_demo.cpp)
+target_link_libraries(waypoint_parsing_demo parse_image_waypoints)
+target_include_directories(waypoint_parsing_demo PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>
 )
@@ -26,7 +37,7 @@ target_include_directories(parse_image_waypoints PUBLIC
 # The recommended way in modern CMake is to only use targets, exporting and linking against them.
 # The recommended way to link a target to a dependency is to use ament_target_dependencies.
 ament_target_dependencies(parse_image_waypoints ${THIS_PACKAGE_INCLUDE_DEPENDS})
-#ament_target_dependencies(my_node ${THIS_PACKAGE_INCLUDE_DEPENDS})
+ament_target_dependencies(waypoint_parsing_demo ${THIS_PACKAGE_INCLUDE_DEPENDS})
 
 # Modern cmake advises to add compile commands on a target basis.
 # -Wall and -Wextra are standard but additional commands should be added at the command line.
@@ -50,15 +61,14 @@ install(
 )
 
 # Install Binaries
-# install(
-#   TARGETS my_node
-#   ARCHIVE DESTINATION lib
-#   LIBRARY DESTINATION lib
-#   RUNTIME DESTINATION bin
-#   DESTINATION lib/${PROJECT_NAME}
-# )
+install(
+  TARGETS waypoint_parsing_demo
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin
+  DESTINATION lib/${PROJECT_NAME}
+)
 
-# Install include directory
 install(
   DIRECTORY include/
   DESTINATION include

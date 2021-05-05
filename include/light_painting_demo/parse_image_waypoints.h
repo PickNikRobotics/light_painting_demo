@@ -1,4 +1,3 @@
-
 /*********************************************************************
  * Software License Agreement (BSD License)
  *
@@ -39,7 +38,20 @@
 
 #pragma once
 
+#include <string>
+#include <vector>
+#include <yaml-cpp/yaml.h>
+
 namespace light_painting_demo
 {
+
+class ParseImageWaypoints
+{
+public:
+  // arg yaml_file: e.g. "/home/.../resources/simple_devel_image.yaml"
+  bool loadWaypointsFromFile(const std::string &yaml_file);
+
+  std::vector<std::pair<double, double>> pixel_waypoints_x_y_;  // a vector of X,Y pixel waypoints
+};
 
 }  // namespace light_painting_demo
