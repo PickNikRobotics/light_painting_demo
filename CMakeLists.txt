@@ -14,23 +14,19 @@ find_package(ament_cmake REQUIRED)
 
 # set(THIS_PACKAGE_INCLUDE_DEPENDS <build_depend_pkg>)
 
-# Best practice: place only .c/.cpp files in add_library and add_executable
-# Add a library
-# add_library(my_library SHARED src/my_lib.cpp)
+add_library(parse_image_waypoints SHARED src/parse_image_waypoints.cpp)
 
-# Add an executable
 # add_executable(my_node src/my_node.cpp)
 
-# Place header files for your target here. Your target is a library or executable.
-# target_include_directories(my_library PUBLIC
-#     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-#     $<INSTALL_INTERFACE:include>
-# )
+target_include_directories(parse_image_waypoints PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>
+)
 
 # The recommended way in modern CMake is to only use targets, exporting and linking against them.
 # The recommended way to link a target to a dependency is to use ament_target_dependencies.
-# ament_target_dependencies(my_library ${THIS_PACKAGE_INCLUDE_DEPENDS})
-# ament_target_dependencies(my_node ${THIS_PACKAGE_INCLUDE_DEPENDS})
+ament_target_dependencies(parse_image_waypoints ${THIS_PACKAGE_INCLUDE_DEPENDS})
+#ament_target_dependencies(my_node ${THIS_PACKAGE_INCLUDE_DEPENDS})
 
 # Modern cmake advises to add compile commands on a target basis.
 # -Wall and -Wextra are standard but additional commands should be added at the command line.
@@ -38,20 +34,20 @@ find_package(ament_cmake REQUIRED)
 # target_compile_options(my_node PRIVATE -Wall -Wextra)
 
 # Export targets
-# ament_export_targets(export_${PROJECT_NAME} HAS_LIBRARY_TARGET)
+ament_export_targets(export_${PROJECT_NAME} HAS_LIBRARY_TARGET)
 
 # Export dependencies to downstream packages
-# ament_export_dependencies(${THIS_PACKAGE_INCLUDE_DEPENDS})
+ament_export_dependencies(${THIS_PACKAGE_INCLUDE_DEPENDS})
 
 # Install Libraries
-# install(
-#   TARGETS my_library
-#   EXPORT export_${PROJECT_NAME}
-#   ARCHIVE DESTINATION lib
-#   LIBRARY DESTINATION lib
-#   RUNTIME DESTINATION bin
-#   INCLUDES DESTINATION include
-# )
+install(
+  TARGETS parse_image_waypoints
+  EXPORT export_${PROJECT_NAME}
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin
+  INCLUDES DESTINATION include
+)
 
 # Install Binaries
 # install(
@@ -73,6 +69,7 @@ install(
   DIRECTORY
     launch
 #    config
+    resources
   DESTINATION share/${PROJECT_NAME}
 )
 
