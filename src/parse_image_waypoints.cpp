@@ -10,6 +10,7 @@ namespace
 {
   static const std::string WAYPOINT_FRAME_ID = "base_link";
   static constexpr double PIXEL_TO_WORLD_SCALE = 0.001;  // unitless, converts pixels to meters
+  static constexpr double PAINT_PLANE_X_COORDINATE = 0.5;  // meters
 }
 
 bool ParseImageWaypoints::loadWaypointsFromFile(const std::string& yaml_file)
@@ -61,13 +62,13 @@ std::vector<geometry_msgs::msg::PoseStamped> ParseImageWaypoints::transformPixel
 
     transform = net_rotation_from_pixel_to_world * transform;
 
-    target_pose.pose.position.x = 0;
+    target_pose.pose.position.x = PAINT_PLANE_X_COORDINATE;
     target_pose.pose.position.y = transform.translation().y();
     target_pose.pose.position.z = transform.translation().z();
     target_poses.push_back(target_pose);
 
     std::cout << "Waypoint (x,y,z) in frame " << WAYPOINT_FRAME_ID << ":  "
-              << 0
+              << target_pose.pose.position.x
               << "  " << target_pose.pose.position.y
               << "  " << target_pose.pose.position.z
               << std::endl;
