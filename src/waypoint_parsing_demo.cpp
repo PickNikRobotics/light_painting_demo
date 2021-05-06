@@ -12,5 +12,7 @@ int main(int argc, char * argv[])
   std::string yaml_path = "/home/andy/ws_light_demo/src/light_painting_demo/resources/simple_devel_image.yaml";
   parser.loadWaypointsFromFile(yaml_path);
 
+  parser.transformPixelCoordinatesToRobotPose();
+
   return 0;
 }

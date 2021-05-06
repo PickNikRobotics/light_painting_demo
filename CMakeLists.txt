@@ -9,6 +9,9 @@ endif()
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(ament_cmake REQUIRED)
+find_package(eigen3_cmake_module REQUIRED)
+find_package(Eigen3 REQUIRED)
+find_package(geometry_msgs REQUIRED)
 find_package(rclcpp REQUIRED)
 
 # Support new yaml-cpp API.
@@ -18,12 +21,15 @@ include_directories(SYSTEM ${YAMLCPP_INCLUDE_DIRS})
 
 
 set(THIS_PACKAGE_INCLUDE_DEPENDS
+  geometry_msgs
   rclcpp
 )
 
 add_library(parse_image_waypoints SHARED src/parse_image_waypoints.cpp)
+target_link_libraries(parse_image_waypoints ${YAMLCPP_LIBRARIES})
 target_include_directories(parse_image_waypoints PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  ${EIGEN3_INCLUDE_DIR}
   $<INSTALL_INTERFACE:include>
 )
 
@@ -36,7 +42,7 @@ target_include_directories(waypoint_parsing_demo PUBLIC
 
 # The recommended way in modern CMake is to only use targets, exporting and linking against them.
 # The recommended way to link a target to a dependency is to use ament_target_dependencies.
-ament_target_dependencies(parse_image_waypoints ${THIS_PACKAGE_INCLUDE_DEPENDS})
+ament_target_dependencies(parse_image_waypoints ${THIS_PACKAGE_INCLUDE_DEPENDS} ${Eigen_LIBRARIES} geometry_msgs)
 ament_target_dependencies(waypoint_parsing_demo ${THIS_PACKAGE_INCLUDE_DEPENDS})
 
 # Modern cmake advises to add compile commands on a target basis.
@@ -77,7 +83,7 @@ install(
 # Install launch, config directories
 install(
   DIRECTORY
-    launch
+#    launch
 #    config
     resources
   DESTINATION share/${PROJECT_NAME}
