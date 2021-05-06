@@ -83,7 +83,7 @@ install(
 # Install launch, config directories
 install(
   DIRECTORY
-#    launch
+    launch
 #    config
     resources
   DESTINATION share/${PROJECT_NAME}
