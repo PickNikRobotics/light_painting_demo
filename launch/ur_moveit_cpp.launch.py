@@ -283,9 +283,10 @@ def generate_launch_description():
         },
     }
 
-    moveit_cpp_yaml_file_name = (
-        get_package_share_directory("light_painting_demo") + "/config/moveit_cpp.yaml"
-    )
+    moveit_cpp_yaml_file_name = "/home/andy/ws_light_demo/src/light_painting_demo/config/moveit_cpp.yaml"
+#    moveit_cpp_yaml_file_name = (
+#        get_package_share_directory("light_painting_demo") + "/config/moveit_cpp.yaml"
+#    )
 
     moveit_simple_controllers_yaml = load_yaml(
         "light_painting_demo", "config/moveit_controllers.yaml"
