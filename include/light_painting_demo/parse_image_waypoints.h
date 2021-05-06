@@ -38,6 +38,7 @@
 
 #pragma once
 
+#include <geometry_msgs/msg/pose_stamped.hpp>
 #include <string>
 #include <vector>
 #include <yaml-cpp/yaml.h>
@@ -51,7 +52,7 @@ public:
   // arg yaml_file: Full file path e.g. "/home/.../resources/simple_devel_image.yaml"
   bool loadWaypointsFromFile(const std::string &yaml_file);
 
-  bool transformPixelCoordinatesToRobotPose();
+  std::vector<geometry_msgs::msg::PoseStamped> transformPixelCoordinatesToRobotPose();
 
   std::vector<std::pair<int, int>> pixel_waypoints_x_y_;  // a vector of X,Y pixel waypoints
 };
