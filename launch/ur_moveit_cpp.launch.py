@@ -290,32 +290,36 @@ def generate_launch_description():
         },
     }
 
-    # Start the actual move_group node/action server
-    move_group_node = Node(
-        package="moveit_ros_move_group",
-        executable="move_group",
-        output="screen",
-        parameters=[
-            robot_description,
-            robot_description_semantic,
-            robot_description_kinematics,
-            ompl_planning_pipeline_config,
-            trajectory_execution,
-            moveit_controllers,
-            planning_scene_monitor_parameters,
-        ],
+    # moveit_cpp.yaml is passed by filename for now since it's node specific
+    moveit_cpp_yaml_file_name = (
+        get_package_share_directory("light_painting_demo") + "/config/moveit_cpp.yaml"
     )
 
-    # Warehouse mongodb server
-    mongodb_server_node = Node(
-        package="warehouse_ros_mongo",
-        executable="mongo_wrapper_ros.py",
-        parameters=[
-            {"warehouse_port": 33829},
-            {"warehouse_host": "localhost"},
-            {"warehouse_plugin": "warehouse_ros_mongo::MongoDatabaseConnection"},
-        ],
+    moveit_simple_controllers_yaml = load_yaml(
+        "light_painting_demo", "config/moveit_controllers.yaml"
+    )
+    fake_controller = {
+        "moveit_fake_controller_manager": "test", #moveit_simple_controllers_yaml,
+        "moveit_controller_manager": "moveit_fake_controller_manager/MoveItFakeControllerManager",
+    }
+
+    # MoveItCpp demo executable
+    run_moveit_cpp_node = Node(
+        name="run_moveit_cpp",
+        package="run_moveit_cpp",
+        # TODO(henningkayser): add debug argument
+        # prefix='xterm -e gdb --args',
+        executable="run_moveit_cpp",
         output="screen",
+        parameters=[
+            moveit_cpp_yaml_file_name,
+            robot_description,
+            robot_description_semantic,
+            kinematics_yaml,
+            ompl_planning_pipeline_config,
+            trajectory_execution,
+            fake_controller,
+        ],
     )
 
     # rviz with moveit configuration
@@ -328,7 +332,7 @@ def generate_launch_description():
         executable="rviz2",
         name="rviz2_moveit",
         output="log",
-        arguments=["-d", rviz_config_file],
+#        arguments=["-d", rviz_config_file],
         parameters=[
             robot_description,
             robot_description_semantic,
@@ -347,8 +351,7 @@ def generate_launch_description():
     )
 
     nodes_to_start = [
-        move_group_node,
-        mongodb_server_node,
+        run_moveit_cpp_node,
         rviz_node,
         static_tf,
     ]
