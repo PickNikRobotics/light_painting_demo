@@ -260,13 +260,6 @@ def generate_launch_description():
     ompl_planning_yaml = load_yaml("ur_moveit_config", "config/ompl_planning.yaml")
     ompl_planning_pipeline_config["ompl"].update(ompl_planning_yaml)
 
-    # Trajectory Execution Configuration
-    controllers_yaml = load_yaml("light_painting_demo", "config/moveit_controllers.yaml")
-    moveit_controllers = {
-        "moveit_simple_controller_manager": controllers_yaml,
-        "moveit_controller_manager": "moveit_simple_controller_manager/MoveItSimpleControllerManager",
-    }
-
     trajectory_execution = {
         "moveit_manage_controllers": False,
         "trajectory_execution.allowed_execution_duration_scaling": 1.2,
