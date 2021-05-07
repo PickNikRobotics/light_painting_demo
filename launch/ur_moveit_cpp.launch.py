@@ -267,22 +267,6 @@ def generate_launch_description():
         "trajectory_execution.allowed_start_tolerance": 0.01,
     }
 
-    planning_scene_monitor_parameters = {
-        "publish_planning_scene": True,
-        "publish_geometry_updates": True,
-        "publish_state_updates": True,
-        "publish_transforms_updates": True,
-        "planning_scene_monitor_options": {
-            "name": "planning_scene_monitor",
-            "robot_description": "robot_description",
-            "joint_state_topic": "/joint_states",
-            "attached_collision_object_topic": "/move_group/planning_scene_monitor",
-            "publish_planning_scene_topic": "/move_group/publish_planning_scene",
-            "monitored_planning_scene_topic": "/move_group/monitored_planning_scene",
-            "wait_for_initial_state_timeout": 10.0,
-        },
-    }
-
     moveit_cpp_yaml_file_name = (
         get_package_share_directory("light_painting_demo") + "/config/moveit_cpp.yaml"
     )
