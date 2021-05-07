@@ -296,12 +296,10 @@ def generate_launch_description():
     }
 
     # MoveItCpp demo executable
-    run_moveit_cpp_node = Node(
-        name="run_moveit_cpp",
-        package="run_moveit_cpp",
-        # TODO(henningkayser): add debug argument
-        # prefix='xterm -e gdb --args',
-        executable="run_moveit_cpp",
+    run_demo = Node(
+        name="run_demo",
+        package="light_painting_demo",
+        executable="run_demo",
         output="screen",
         parameters=[
             moveit_cpp_yaml_file_name,
@@ -343,7 +341,7 @@ def generate_launch_description():
     )
 
     nodes_to_start = [
-        run_moveit_cpp_node,
+        run_demo,
         rviz_node,
         static_tf,
     ]
