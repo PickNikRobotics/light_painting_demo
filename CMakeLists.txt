@@ -24,6 +24,7 @@ include_directories(SYSTEM ${YAMLCPP_INCLUDE_DIRS})
 
 set(THIS_PACKAGE_INCLUDE_DEPENDS
   geometry_msgs
+  moveit_ros_planning_interface
   rclcpp
 )
 
@@ -50,10 +51,7 @@ target_include_directories(waypoint_parsing_demo PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>
 )
-ament_target_dependencies(run_demo
-  ${THIS_PACKAGE_INCLUDE_DEPENDS}
-  moveit_ros_planning_interface
-)
+ament_target_dependencies(run_demo ${THIS_PACKAGE_INCLUDE_DEPENDS})
 
 # Modern cmake advises to add compile commands on a target basis.
 # -Wall and -Wextra are standard but additional commands should be added at the command line.
@@ -61,15 +59,14 @@ ament_target_dependencies(run_demo
 # target_compile_options(my_node PRIVATE -Wall -Wextra)
 
 # Export targets
-ament_export_targets(export_${PROJECT_NAME} HAS_LIBRARY_TARGET)
+#ament_export_targets(export_${PROJECT_NAME} HAS_LIBRARY_TARGET)
 
 # Export dependencies to downstream packages
-ament_export_dependencies(${THIS_PACKAGE_INCLUDE_DEPENDS})
+#ament_export_dependencies(${THIS_PACKAGE_INCLUDE_DEPENDS})
 
 # Install Libraries
 install(
   TARGETS parse_image_waypoints
-  EXPORT export_${PROJECT_NAME}
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin
@@ -77,12 +74,11 @@ install(
 )
 
 # Install Binaries
-install(
-  TARGETS waypoint_parsing_demo run_demo
-  ARCHIVE DESTINATION lib
+install(TARGETS run_demo
   LIBRARY DESTINATION lib
-  RUNTIME DESTINATION bin
-  DESTINATION lib/${PROJECT_NAME}
+  ARCHIVE DESTINATION lib
+  RUNTIME DESTINATION lib/${PROJECT_NAME}
+  INCLUDES DESTINATION include
 )
 
 install(
