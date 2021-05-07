@@ -12,6 +12,8 @@ find_package(ament_cmake REQUIRED)
 find_package(eigen3_cmake_module REQUIRED)
 find_package(Eigen3 REQUIRED)
 find_package(geometry_msgs REQUIRED)
+find_package(moveit_common REQUIRED)
+find_package(moveit_ros_planning_interface REQUIRED)
 find_package(rclcpp REQUIRED)
 
 # Support new yaml-cpp API.
@@ -32,6 +34,7 @@ target_include_directories(parse_image_waypoints PUBLIC
   ${EIGEN3_INCLUDE_DIR}
   $<INSTALL_INTERFACE:include>
 )
+ament_target_dependencies(parse_image_waypoints ${THIS_PACKAGE_INCLUDE_DEPENDS} ${Eigen_LIBRARIES} geometry_msgs)
 
 add_executable(waypoint_parsing_demo src/waypoint_parsing_demo.cpp)
 target_link_libraries(waypoint_parsing_demo parse_image_waypoints)
@@ -39,11 +42,18 @@ target_include_directories(waypoint_parsing_demo PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>
 )
-
-# The recommended way in modern CMake is to only use targets, exporting and linking against them.
-# The recommended way to link a target to a dependency is to use ament_target_dependencies.
-ament_target_dependencies(parse_image_waypoints ${THIS_PACKAGE_INCLUDE_DEPENDS} ${Eigen_LIBRARIES} geometry_msgs)
 ament_target_dependencies(waypoint_parsing_demo ${THIS_PACKAGE_INCLUDE_DEPENDS})
+
+add_executable(run_demo src/run_demo.cpp)
+target_link_libraries(run_demo parse_image_waypoints)
+target_include_directories(waypoint_parsing_demo PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>
+)
+ament_target_dependencies(run_demo
+  ${THIS_PACKAGE_INCLUDE_DEPENDS}
+  moveit_ros_planning_interface
+)
 
 # Modern cmake advises to add compile commands on a target basis.
 # -Wall and -Wextra are standard but additional commands should be added at the command line.
@@ -68,7 +78,7 @@ install(
 
 # Install Binaries
 install(
-  TARGETS waypoint_parsing_demo
+  TARGETS waypoint_parsing_demo run_demo
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin
