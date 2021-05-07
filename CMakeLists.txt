@@ -84,7 +84,7 @@ install(
 install(
   DIRECTORY
     launch
-#    config
+    config
     resources
   DESTINATION share/${PROJECT_NAME}
 )
