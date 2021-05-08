@@ -58,8 +58,8 @@ static const double max_acceleration_scaling_factor = 1.0;
 
 
 // TODO(andyz): do not hard-code this
-// static const std::string YAML_PATH = "/home/andy/ws_light_demo/src/light_painting_demo/resources/simple_devel_image.yaml";
-static const std::string YAML_PATH = "/home/boston/light_ws/src/light_painting_demo/resources/simple_devel_image.yaml";
+static const std::string YAML_PATH = "/home/andy/ws_light_demo/src/light_painting_demo/resources/simple_devel_image.yaml";
+//static const std::string YAML_PATH = "/home/boston/light_ws/src/light_painting_demo/resources/simple_devel_image.yaml";
 
 class RunDemo
 {
@@ -93,8 +93,14 @@ public:
     // Combined trajectory
     auto trajectory = std::make_shared<robot_trajectory::RobotTrajectory>(moveit_cpp_->getRobotModel(), GROUP_NAME);
 
-    // Set initial state
-    arm.setStartStateToCurrentState();
+    // A little delay before planning
+    rclcpp::sleep_for(std::chrono::seconds(3));
+
+    // Get current robot state
+    moveit::core::RobotStatePtr current_state = arm.getStartState();
+    RCLCPP_INFO(LOGGER, "Arm start state: ");
+    current_state->printStatePositions();
+    arm.setStartState(*current_state);
 
     // Plan to each waypoint
     for (const auto& waypoint :  waypoints)

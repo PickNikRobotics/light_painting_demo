@@ -35,7 +35,7 @@ target_include_directories(parse_image_waypoints PUBLIC
   ${EIGEN3_INCLUDE_DIR}
   $<INSTALL_INTERFACE:include>
 )
-ament_target_dependencies(parse_image_waypoints ${THIS_PACKAGE_INCLUDE_DEPENDS} ${Eigen_LIBRARIES} geometry_msgs)
+ament_target_dependencies(parse_image_waypoints ${THIS_PACKAGE_INCLUDE_DEPENDS} ${Eigen_LIBRARIES})
 
 add_executable(waypoint_parsing_demo src/waypoint_parsing_demo.cpp)
 target_link_libraries(waypoint_parsing_demo parse_image_waypoints)
