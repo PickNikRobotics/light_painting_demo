@@ -102,45 +102,52 @@ public:
     current_state->printStatePositions();
     arm.setStartState(*current_state);
 
-    // Plan to each waypoint
-    for (const auto& waypoint :  waypoints)
-    {
-      if (!arm.setGoal(waypoint, EEF_NAME))
-      {
-        RCLCPP_ERROR(LOGGER, "Failed to set goal");
-        return;
-      }
+    // Demo of a very simple motion
+    moveit::core::RobotState target_state = *current_state;
+    target_state.setVariablePosition("shoulder_pan_joint", 0.1);
+    arm.setGoal(target_state);
+    arm.plan();
+    arm.execute();
 
-      const auto plan = arm.plan();
-      if (plan.error_code != moveit_msgs::msg::MoveItErrorCodes::SUCCESS)
-      {
-        RCLCPP_ERROR(LOGGER, "Planning Failed");
-        return;
-      }
+    // // Plan to each waypoint
+    // for (const auto& waypoint :  waypoints)
+    // {
+    //   if (!arm.setGoal(waypoint, EEF_NAME))
+    //   {
+    //     RCLCPP_ERROR(LOGGER, "Failed to set goal");
+    //     return;
+    //   }
 
-      // Combine trajectories
-      trajectory->append(*plan.trajectory.get(), 0.1 /* placeholder dt, timestamps are recomputed */);
+    //   const auto plan = arm.plan();
+    //   if (plan.error_code != moveit_msgs::msg::MoveItErrorCodes::SUCCESS)
+    //   {
+    //     RCLCPP_ERROR(LOGGER, "Planning Failed");
+    //     return;
+    //   }
 
-      // Update robot start state
-      if (!arm.setStartState(plan.trajectory->getLastWayPoint()))
-      {
-        RCLCPP_ERROR(LOGGER, "Failed to set start state");
-        return;
-      }
-    }
+    //   // Combine trajectories
+    //   trajectory->append(*plan.trajectory.get(), 0.1 /* placeholder dt, timestamps are recomputed */);
 
-    // TOTG
-    trajectory_processing::TimeOptimalTrajectoryGeneration totg(path_tolerance, resample_dt, min_angle_change);
-    if (!totg.computeTimeStamps(*trajectory.get(), max_velocity_scaling_factor, max_acceleration_scaling_factor))
-    {
-      RCLCPP_ERROR(LOGGER, "TOTG Failed");
-      return;
-    }
+    //   // Update robot start state
+    //   if (!arm.setStartState(plan.trajectory->getLastWayPoint()))
+    //   {
+    //     RCLCPP_ERROR(LOGGER, "Failed to set start state");
+    //     return;
+    //   }
+    // }
 
-    if (!moveit_cpp_->execute(GROUP_NAME, trajectory))
-    {
-      RCLCPP_ERROR(LOGGER, "Failed to execute trajectory");
-    }
+    // // TOTG
+    // trajectory_processing::TimeOptimalTrajectoryGeneration totg(path_tolerance, resample_dt, min_angle_change);
+    // if (!totg.computeTimeStamps(*trajectory.get(), max_velocity_scaling_factor, max_acceleration_scaling_factor))
+    // {
+    //   RCLCPP_ERROR(LOGGER, "TOTG Failed");
+    //   return;
+    // }
+
+    // if (!moveit_cpp_->execute(GROUP_NAME, trajectory))
+    // {
+    //   RCLCPP_ERROR(LOGGER, "Failed to execute trajectory");
+    // }
   }
 
 private:
