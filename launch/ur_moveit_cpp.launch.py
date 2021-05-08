@@ -260,8 +260,9 @@ def generate_launch_description():
     ompl_planning_yaml = load_yaml("ur_moveit_config", "config/ompl_planning.yaml")
     ompl_planning_pipeline_config["ompl"].update(ompl_planning_yaml)
 
+    # Optional fine-tuning of trajectory execution
     trajectory_execution = {
-        "moveit_manage_controllers": False,
+        "moveit_manage_controllers": True,
         "trajectory_execution.allowed_execution_duration_scaling": 1.2,
         "trajectory_execution.allowed_goal_duration_margin": 0.5,
         "trajectory_execution.allowed_start_tolerance": 0.01,
@@ -274,9 +275,9 @@ def generate_launch_description():
     moveit_simple_controllers_yaml = load_yaml(
         "light_painting_demo", "config/moveit_controllers.yaml"
     )
-    fake_controller = {
-        "moveit_fake_controller_manager": moveit_simple_controllers_yaml,
-        "moveit_controller_manager": "moveit_fake_controller_manager/MoveItFakeControllerManager",
+    moveit_controllers = {
+        "moveit_simple_controller_manager": moveit_simple_controllers_yaml,
+        "moveit_controller_manager": "moveit_simple_controller_manager/MoveItSimpleControllerManager",
     }
 
     # MoveItCpp demo executable
@@ -291,8 +292,8 @@ def generate_launch_description():
             robot_description_semantic,
             kinematics_yaml,
             ompl_planning_pipeline_config,
-            trajectory_execution,
-            fake_controller,
+#            trajectory_execution,
+            moveit_controllers,
         ],
     )
 
