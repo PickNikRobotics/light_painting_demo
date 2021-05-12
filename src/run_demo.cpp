@@ -41,7 +41,7 @@
 #include <moveit/moveit_cpp/planning_component.h>
 #include <moveit/robot_state/conversions.h>
 #include <moveit/trajectory_processing/time_optimal_trajectory_generation.h>
-#include <moveit_msgs/msg/display_robot_state.hpp>
+#include <moveit_msgs/msg/display_trajectory.hpp>
 #include <trajectory_msgs/msg/joint_trajectory.hpp>
 #include <rclcpp/rclcpp.hpp>
 
@@ -58,8 +58,9 @@ static const double max_acceleration_scaling_factor = 1.0;
 
 
 // TODO(andyz): do not hard-code this
-static const std::string YAML_PATH = "/home/andy/ws_light_demo/src/light_painting_demo/resources/simple_devel_image.yaml";
-//static const std::string YAML_PATH = "/home/boston/light_ws/src/light_painting_demo/resources/simple_devel_image.yaml";
+// static const std::string YAML_PATH = "/home/andy/ws_light_demo/src/light_painting_demo/resources/simple_devel_image.yaml";
+// static const std::string YAML_PATH = "/home/boston/light_ws/src/light_painting_demo/resources/simple_devel_image.yaml";
+static const std::string YAML_PATH = "/home/boston/light_ws/src/light_painting_demo/resources/moveit.yaml";
 
 class RunDemo
 {
@@ -67,7 +68,7 @@ public:
 
   RunDemo(const rclcpp::Node::SharedPtr& node)
   : node_(node)
-  , robot_state_publisher_(node_->create_publisher<moveit_msgs::msg::DisplayRobotState>("display_robot_state", 1))
+  , robot_traj_publisher_(node_->create_publisher<moveit_msgs::msg::DisplayTrajectory>("robot_trajectory", 1))
   {
   }
 
@@ -103,56 +104,64 @@ public:
     arm.setStartState(*current_state);
 
     // Demo of a very simple motion
-    moveit::core::RobotState target_state = *current_state;
-    target_state.setVariablePosition("shoulder_pan_joint", 0.1);
-    arm.setGoal(target_state);
-    arm.plan();
-    arm.execute();
+    // moveit::core::RobotState target_state = *current_state;
+    // target_state.setVariablePosition("shoulder_pan_joint", 0.1);
+    // arm.setGoal(target_state);
+    // arm.plan();
+    // arm.execute();
 
-    // // Plan to each waypoint
-    // for (const auto& waypoint :  waypoints)
-    // {
-    //   if (!arm.setGoal(waypoint, EEF_NAME))
-    //   {
-    //     RCLCPP_ERROR(LOGGER, "Failed to set goal");
-    //     return;
-    //   }
+    // Plan to each waypoint
+    for (const auto& waypoint :  waypoints)
+    {
+      if (!arm.setGoal(waypoint, EEF_NAME))
+      {
+        RCLCPP_ERROR(LOGGER, "Failed to set goal");
+        return;
+      }
 
-    //   const auto plan = arm.plan();
-    //   if (plan.error_code != moveit_msgs::msg::MoveItErrorCodes::SUCCESS)
-    //   {
-    //     RCLCPP_ERROR(LOGGER, "Planning Failed");
-    //     return;
-    //   }
+      const auto plan = arm.plan();
+      if (plan.error_code != moveit_msgs::msg::MoveItErrorCodes::SUCCESS)
+      {
+        RCLCPP_ERROR(LOGGER, "Planning Failed");
+        return;
+      }
 
-    //   // Combine trajectories
-    //   trajectory->append(*plan.trajectory.get(), 0.1 /* placeholder dt, timestamps are recomputed */);
+      // Combine trajectories
+      trajectory->append(*plan.trajectory.get(), 0.1 /* placeholder dt, timestamps are recomputed */);
 
-    //   // Update robot start state
-    //   if (!arm.setStartState(plan.trajectory->getLastWayPoint()))
-    //   {
-    //     RCLCPP_ERROR(LOGGER, "Failed to set start state");
-    //     return;
-    //   }
-    // }
+      // Update robot start state
+      if (!arm.setStartState(plan.trajectory->getLastWayPoint()))
+      {
+        RCLCPP_ERROR(LOGGER, "Failed to set start state");
+        return;
+      }
+    }
 
-    // // TOTG
-    // trajectory_processing::TimeOptimalTrajectoryGeneration totg(path_tolerance, resample_dt, min_angle_change);
-    // if (!totg.computeTimeStamps(*trajectory.get(), max_velocity_scaling_factor, max_acceleration_scaling_factor))
-    // {
-    //   RCLCPP_ERROR(LOGGER, "TOTG Failed");
-    //   return;
-    // }
+    // TOTG
+    trajectory_processing::TimeOptimalTrajectoryGeneration totg(path_tolerance, resample_dt, min_angle_change);
+    if (!totg.computeTimeStamps(*trajectory.get(), max_velocity_scaling_factor, max_acceleration_scaling_factor))
+    {
+      RCLCPP_ERROR(LOGGER, "TOTG Failed");
+      return;
+    }
 
-    // if (!moveit_cpp_->execute(GROUP_NAME, trajectory))
-    // {
-    //   RCLCPP_ERROR(LOGGER, "Failed to execute trajectory");
-    // }
+    moveit_msgs::msg::DisplayTrajectory display_traj_msg;
+    display_traj_msg.trajectory.resize(1);
+    trajectory->getRobotTrajectoryMsg(display_traj_msg.trajectory.at(0));
+    moveit::core::robotStateToRobotStateMsg(*trajectory->getFirstWayPointPtr().get(), display_traj_msg.trajectory_start);
+    robot_traj_publisher_->publish(display_traj_msg);
+
+    if (!moveit_cpp_->execute(GROUP_NAME, trajectory))
+    {
+      RCLCPP_ERROR(LOGGER, "Failed to execute trajectory");
+    }
+
+
   }
 
 private:
   rclcpp::Node::SharedPtr node_;
-  rclcpp::Publisher<moveit_msgs::msg::DisplayRobotState>::SharedPtr robot_state_publisher_;
+  rclcpp::Publisher<moveit_msgs::msg::DisplayTrajectory>::SharedPtr robot_traj_publisher_;
   light_painting_demo::ParseImageWaypoints parser_;
   moveit::planning_interface::MoveItCppPtr moveit_cpp_;
 };
