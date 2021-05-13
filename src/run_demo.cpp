@@ -36,6 +36,7 @@
    Desc: Follow a series of waypoints from image file.
 */
 
+#include <rclcpp/rclcpp.hpp>
 #include <light_painting_demo/parse_image_waypoints.h>
 #include <moveit/moveit_cpp/moveit_cpp.h>
 #include <moveit/moveit_cpp/planning_component.h>
@@ -43,11 +44,12 @@
 #include <moveit/trajectory_processing/time_optimal_trajectory_generation.h>
 #include <moveit_msgs/msg/display_trajectory.hpp>
 #include <trajectory_msgs/msg/joint_trajectory.hpp>
-#include <rclcpp/rclcpp.hpp>
+#include <visualization_msgs/msg/marker.hpp>
 
 static const rclcpp::Logger LOGGER = rclcpp::get_logger("run_demo");
 static const std::string GROUP_NAME = "ur_manipulator";
 static const std::string EEF_NAME = "tool0";
+static const std::string BASE_LINK = "base_link";
 
 static const double path_tolerance = 0.1;
 static const double resample_dt = 0.1;
@@ -69,6 +71,7 @@ public:
   RunDemo(const rclcpp::Node::SharedPtr& node)
   : node_(node)
   , robot_traj_publisher_(node_->create_publisher<moveit_msgs::msg::DisplayTrajectory>("robot_trajectory", 1))
+  , robot_marker_publisher_(node_->create_publisher<visualization_msgs::msg::Marker>("robot_markers", 1))
   {
   }
 
@@ -103,12 +106,16 @@ public:
     current_state->printStatePositions();
     arm.setStartState(*current_state);
 
-    // Demo of a very simple motion
-    // moveit::core::RobotState target_state = *current_state;
-    // target_state.setVariablePosition("shoulder_pan_joint", 0.1);
-    // arm.setGoal(target_state);
-    // arm.plan();
-    // arm.execute();
+    // Move to first waypoint
+    arm.setGoal(waypoints.at(0), EEF_NAME);
+    const auto plan_first = arm.plan();
+    if (!moveit_cpp_->execute(GROUP_NAME, plan_first.trajectory))
+    {
+      RCLCPP_ERROR(LOGGER, "Failed to reach first waypoint");
+    }
+
+    current_state = arm.getStartState();
+    arm.setStartState(*current_state);
 
     // Plan to each waypoint
     for (const auto& waypoint :  waypoints)
@@ -145,23 +152,52 @@ public:
       return;
     }
 
+    // Display robot trajectory
     moveit_msgs::msg::DisplayTrajectory display_traj_msg;
     display_traj_msg.trajectory.resize(1);
     trajectory->getRobotTrajectoryMsg(display_traj_msg.trajectory.at(0));
     moveit::core::robotStateToRobotStateMsg(*trajectory->getFirstWayPointPtr().get(), display_traj_msg.trajectory_start);
     robot_traj_publisher_->publish(display_traj_msg);
 
+    // EEF trajectory
+    visualization_msgs::msg::Marker marker_msg;
+    marker_msg.header.frame_id = BASE_LINK;
+    marker_msg.type = 8;
+    marker_msg.action = 0;
+    marker_msg.lifetime = rclcpp::Duration(0);
+    marker_msg.scale.x = 0.008;
+    marker_msg.scale.y = 0.008;
+    marker_msg.scale.z = 0.008;
+    marker_msg.color.b = 1.0;
+    marker_msg.color.a = 1.0;
+
+    const auto num_states = trajectory->getWayPointCount();
+    marker_msg.points.resize(num_states);
+
+    for (unsigned int i = 0; i < num_states; i++)
+    {
+      const moveit::core::RobotState& state = trajectory->getWayPoint(i);
+      const Eigen::Isometry3d& transform = state.getFrameTransform(EEF_NAME);
+      const Eigen::Vector3d translation = transform.translation();
+
+      marker_msg.points.at(i).x = translation(0);
+      marker_msg.points.at(i).y = translation(1);
+      marker_msg.points.at(i).z = translation(2);
+    }
+
+    robot_marker_publisher_->publish(marker_msg);
+
+    // Execute trajectory
     if (!moveit_cpp_->execute(GROUP_NAME, trajectory))
     {
       RCLCPP_ERROR(LOGGER, "Failed to execute trajectory");
     }
-
-
   }
 
 private:
   rclcpp::Node::SharedPtr node_;
   rclcpp::Publisher<moveit_msgs::msg::DisplayTrajectory>::SharedPtr robot_traj_publisher_;
+  rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr robot_marker_publisher_;
   light_painting_demo::ParseImageWaypoints parser_;
   moveit::planning_interface::MoveItCppPtr moveit_cpp_;
 };

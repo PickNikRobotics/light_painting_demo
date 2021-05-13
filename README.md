@@ -8,9 +8,9 @@ https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver
 
 ### Running A Simulation
 
-`ros2 launch ur_bringup ur_control.launch.py ur_type:=ur5e robot_ip:=yyy.yyy.yyy.yyy use_fake_hardware:=true launch_rviz:=true`
+`ros2 launch ur_bringup ur_control.launch.py ur_type:=ur5e robot_ip:=yyy.yyy.yyy.yyy use_fake_hardware:=true launch_rviz:=false`
 
-`ros2 launch light_painting_demo ur_moveit_cpp.launch.py ur_type:=ur5e robot_ip:="xxx.xxx" use_fake_hardware:=true launch_rviz:=false`
+`ros2 launch light_painting_demo ur_moveit_cpp.launch.py ur_type:=ur5e robot_ip:="xxx.xxx" use_fake_hardware:=true launch_rviz:=true`
 
 ### Adding a new image
 
