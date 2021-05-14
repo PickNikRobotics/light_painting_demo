@@ -100,13 +100,48 @@ public:
     // A little delay before planning
     rclcpp::sleep_for(std::chrono::seconds(3));
 
+    // Add collision objects in office
+    moveit_msgs::msg::CollisionObject collision_object;
+    collision_object.header.frame_id = BASE_LINK;
+    collision_object.id = "box";
+
+    // Table
+    shape_msgs::msg::SolidPrimitive box;
+    box.type = box.BOX;
+    box.dimensions = { 0.73, 1.23, 0.25 };
+
+    geometry_msgs::msg::Pose box_pose;
+    box_pose.position.z = -0.125;
+
+    collision_object.primitives.push_back(box);
+    collision_object.primitive_poses.push_back(box_pose);
+
+    // Back Wall
+    box.dimensions = { 1.5, 2.0, 0.25 };
+    box_pose.position.x = -0.73/2.0 -0.25/2.0;
+    box_pose.position.z = 1.5/2.0 - 0.25;
+    box_pose.orientation.y = 0.7071;
+    box_pose.orientation.w = 0.7071;
+
+    collision_object.primitives.push_back(box);
+    collision_object.primitive_poses.push_back(box_pose);
+
+    collision_object.operation = collision_object.ADD;
+
+    // Add object to planning scene
+    {  // Lock PlanningScene
+      planning_scene_monitor::LockedPlanningSceneRW scene(moveit_cpp_->getPlanningSceneMonitor());
+      scene->processCollisionObjectMsg(collision_object);
+    }  // Unlock PlanningScene
+
+
     // Get current robot state
     moveit::core::RobotStatePtr current_state = arm.getStartState();
     RCLCPP_INFO(LOGGER, "Arm start state: ");
     current_state->printStatePositions();
     arm.setStartState(*current_state);
 
-    // Move to first waypoint
+    // Move to first waypoint to prevent the light trail from the starting orientation
     arm.setGoal(waypoints.at(0), EEF_NAME);
     const auto plan_first = arm.plan();
     if (!moveit_cpp_->execute(GROUP_NAME, plan_first.trajectory))
@@ -116,6 +151,9 @@ public:
 
     current_state = arm.getStartState();
     arm.setStartState(*current_state);
+
+    // A delay before completing the light trail
+    rclcpp::sleep_for(std::chrono::seconds(3));
 
     // Plan to each waypoint
     for (const auto& waypoint :  waypoints)
