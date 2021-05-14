@@ -74,7 +74,7 @@ install(
 )
 
 # Install Binaries
-install(TARGETS run_demo
+install(TARGETS run_demo waypoint_parsing_demo
   LIBRARY DESTINATION lib
   ARCHIVE DESTINATION lib
   RUNTIME DESTINATION lib/${PROJECT_NAME}
