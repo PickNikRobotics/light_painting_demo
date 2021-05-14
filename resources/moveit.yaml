@@ -11,9 +11,9 @@ waypoints:
   -
     x: 403
     y: 369
-  -
-    x: 367
-    y: 106
+  # -
+  #   x: 367 # This waypoint casues a large upward swing
+  #   y: 106
   -
     x: 415 # Move to the o
     y: 398
@@ -47,7 +47,7 @@ waypoints:
   -
     x: 487
     y: 387
-  -
+  # -
     x: 500 # Start the e
     y: 397
   -

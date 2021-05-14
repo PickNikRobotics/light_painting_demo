@@ -15,6 +15,7 @@ namespace
 
 bool ParseImageWaypoints::loadWaypointsFromFile(const std::string& yaml_file)
 {
+  std::cout << "Loading waypoints file: " << yaml_file << std::endl;
   YAML::Node config = YAML::LoadFile(yaml_file);
 
   // Fill the pixel waypoints vector
@@ -41,8 +42,9 @@ std::vector<geometry_msgs::msg::PoseStamped> ParseImageWaypoints::transformPixel
 
   // So, to transform from pixel coordinates to robot coordinates, do...
   // 1. scale by 0.001
-  // 2. translate by (-0.5, -0.5)
+  // 2. translate by (-0.5, -1.0)
   // 3. do the inverse of (rotate (90* about X) then (90* about Z))
+  // Then mirror the image because the camera looks at the robot and the text needs read L to R
 
   std::vector<geometry_msgs::msg::PoseStamped> target_poses;
   geometry_msgs::msg::PoseStamped target_pose;
@@ -54,13 +56,17 @@ std::vector<geometry_msgs::msg::PoseStamped> ParseImageWaypoints::transformPixel
   Eigen::Quaterniond rot_90_about_z(0.7071, 0, 0, 0.7071);
   Eigen::Quaterniond net_rotation_from_pixel_to_world = (rot_90_about_x * rot_90_about_z).inverse();
 
+  // Mirror X-coordinates
+  Eigen::Isometry3d mirror(Eigen::Isometry3d::Identity());
+  mirror(0,0) = -1;
+
   for (size_t waypoint_idx = 0; waypoint_idx < pixel_waypoints_x_y_.size(); ++waypoint_idx)
   {
     transform = Eigen::Isometry3d::Identity();
     transform.translation().x() = pixel_waypoints_x_y_[waypoint_idx].first * PIXEL_TO_WORLD_SCALE - 0.5;
     transform.translation().y() = pixel_waypoints_x_y_[waypoint_idx].second * PIXEL_TO_WORLD_SCALE - 1.0;
 
-    transform = net_rotation_from_pixel_to_world * transform;
+    transform = mirror * net_rotation_from_pixel_to_world * transform;
 
     target_pose.pose.position.x = PAINT_PLANE_X_COORDINATE;
     target_pose.pose.position.y = transform.translation().y();

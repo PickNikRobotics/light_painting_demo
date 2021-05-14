@@ -260,27 +260,12 @@ def generate_launch_description():
     ompl_planning_yaml = load_yaml("ur_moveit_config", "config/ompl_planning.yaml")
     ompl_planning_pipeline_config["ompl"].update(ompl_planning_yaml)
 
+    # Optional fine-tuning of trajectory execution
     trajectory_execution = {
-        "moveit_manage_controllers": False,
+        "moveit_manage_controllers": True,
         "trajectory_execution.allowed_execution_duration_scaling": 1.2,
         "trajectory_execution.allowed_goal_duration_margin": 0.5,
         "trajectory_execution.allowed_start_tolerance": 0.01,
-    }
-
-    planning_scene_monitor_parameters = {
-        "publish_planning_scene": True,
-        "publish_geometry_updates": True,
-        "publish_state_updates": True,
-        "publish_transforms_updates": True,
-        "planning_scene_monitor_options": {
-            "name": "planning_scene_monitor",
-            "robot_description": "robot_description",
-            "joint_state_topic": "/joint_states",
-            "attached_collision_object_topic": "/move_group/planning_scene_monitor",
-            "publish_planning_scene_topic": "/move_group/publish_planning_scene",
-            "monitored_planning_scene_topic": "/move_group/monitored_planning_scene",
-            "wait_for_initial_state_timeout": 10.0,
-        },
     }
 
     moveit_cpp_yaml_file_name = (
@@ -290,9 +275,9 @@ def generate_launch_description():
     moveit_simple_controllers_yaml = load_yaml(
         "light_painting_demo", "config/moveit_controllers.yaml"
     )
-    fake_controller = {
-        "moveit_fake_controller_manager": moveit_simple_controllers_yaml,
-        "moveit_controller_manager": "moveit_fake_controller_manager/MoveItFakeControllerManager",
+    moveit_controllers = {
+        "moveit_simple_controller_manager": moveit_simple_controllers_yaml,
+        "moveit_controller_manager": "moveit_simple_controller_manager/MoveItSimpleControllerManager",
     }
 
     # MoveItCpp demo executable
@@ -307,8 +292,8 @@ def generate_launch_description():
             robot_description_semantic,
             kinematics_yaml,
             ompl_planning_pipeline_config,
-            trajectory_execution,
-            fake_controller,
+#            trajectory_execution,
+            moveit_controllers,
         ],
     )
 
