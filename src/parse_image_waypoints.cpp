@@ -39,10 +39,7 @@ std::vector<geometry_msgs::msg::PoseStamped> ParseImageWaypoints::transformPixel
 {
   // (0,0) is the upper-left pixel coordinate in the image
   // (500,500) is the center pixel of the image
-
   // (0.5, 0, 0.5) meters is roughly the center of the robot workspace
-
-  // So, to transform from pixel coordinates to robot coordinates, do...
 
   std::vector<geometry_msgs::msg::PoseStamped> target_poses;
   geometry_msgs::msg::PoseStamped target_pose;
@@ -56,7 +53,7 @@ std::vector<geometry_msgs::msg::PoseStamped> ParseImageWaypoints::transformPixel
 
   // Mirror Y-coordinates
   Eigen::Isometry3d mirror(Eigen::Isometry3d::Identity());
-  //  mirror(1,1) = -1;
+  mirror(1,1) = -1;
 
   for (size_t waypoint_idx = 0; waypoint_idx < pixel_waypoints_x_y_.size(); ++waypoint_idx)
   {
@@ -65,15 +62,8 @@ std::vector<geometry_msgs::msg::PoseStamped> ParseImageWaypoints::transformPixel
     transform.translation().x() = -(0.5 * IMAGE_WIDTH_IN_PIXELS - pixel_waypoints_x_y_[waypoint_idx].first);
     transform.translation().y() = -(0.5 * IMAGE_WIDTH_IN_PIXELS - pixel_waypoints_x_y_[waypoint_idx].second);
 
-    std::cout << "x1: " << transform.translation().x() << std::endl;
-    std::cout << "y1: " << transform.translation().y() << std::endl;
-
     // Rotate to match WAYPOINT_FRAME_ID axes
     transform = mirror * net_rotation_from_pixel_to_world * transform;
-
-    std::cout << "x2: " << transform.translation().x() << std::endl;
-    std::cout << "y2: " << transform.translation().y() << std::endl;
-    std::cout << "z2: " << transform.translation().z() << std::endl;
 
     // X (depth) is constant
     transform.translation().x() = PAINT_PLANE_X_COORDINATE;
@@ -81,10 +71,6 @@ std::vector<geometry_msgs::msg::PoseStamped> ParseImageWaypoints::transformPixel
     // Scale
     transform.translation().y() *= PIXEL_TO_WORLD_SCALE;
     transform.translation().z() *= PIXEL_TO_WORLD_SCALE;
-
-    std::cout << "x3: " << transform.translation().x() << std::endl;
-    std::cout << "y3: " << transform.translation().y() << std::endl;
-    std::cout << "z3: " << transform.translation().z() << std::endl;
 
     // Translate, since origin is at the base of the robot
     transform.translation().z() += HEIGHT_TO_WORKSPACE_CENTER;
