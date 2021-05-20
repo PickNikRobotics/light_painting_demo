@@ -9,8 +9,10 @@ namespace light_painting_demo
 namespace
 {
   static const std::string WAYPOINT_FRAME_ID = "base_link";
-  static constexpr double PIXEL_TO_WORLD_SCALE = 0.001;  // unitless, converts pixels to meters
+  static constexpr double PIXEL_TO_WORLD_SCALE = 0.002;  // unitless, converts pixels to meters
   static constexpr double PAINT_PLANE_X_COORDINATE = 0.5;  // meters
+  static constexpr size_t IMAGE_WIDTH_IN_PIXELS = 1000;  // pixel width and height
+  static constexpr double HEIGHT_TO_WORKSPACE_CENTER = 0.5;  // meters
 }
 
 bool ParseImageWaypoints::loadWaypointsFromFile(const std::string& yaml_file)
@@ -41,10 +43,6 @@ std::vector<geometry_msgs::msg::PoseStamped> ParseImageWaypoints::transformPixel
   // (0.5, 0, 0.5) meters is roughly the center of the robot workspace
 
   // So, to transform from pixel coordinates to robot coordinates, do...
-  // 1. scale by 0.001
-  // 2. translate by (-0.5, -1.0)
-  // 3. do the inverse of (rotate (90* about X) then (90* about Z))
-  // Then mirror the image because the camera looks at the robot and the text needs read L to R
 
   std::vector<geometry_msgs::msg::PoseStamped> target_poses;
   geometry_msgs::msg::PoseStamped target_pose;
@@ -56,28 +54,45 @@ std::vector<geometry_msgs::msg::PoseStamped> ParseImageWaypoints::transformPixel
   Eigen::Quaterniond rot_90_about_z(0.7071, 0, 0, 0.7071);
   Eigen::Quaterniond net_rotation_from_pixel_to_world = (rot_90_about_x * rot_90_about_z).inverse();
 
-  // Mirror X-coordinates
+  // Mirror Y-coordinates
   Eigen::Isometry3d mirror(Eigen::Isometry3d::Identity());
-  mirror(0,0) = -1;
+  //  mirror(1,1) = -1;
 
   for (size_t waypoint_idx = 0; waypoint_idx < pixel_waypoints_x_y_.size(); ++waypoint_idx)
   {
+    // Translate the pixel to the center of the robot workspace
     transform = Eigen::Isometry3d::Identity();
-    transform.translation().x() = pixel_waypoints_x_y_[waypoint_idx].first * PIXEL_TO_WORLD_SCALE - 0.5;
-    transform.translation().y() = pixel_waypoints_x_y_[waypoint_idx].second * PIXEL_TO_WORLD_SCALE - 1.0;
+    transform.translation().x() = -(0.5 * IMAGE_WIDTH_IN_PIXELS - pixel_waypoints_x_y_[waypoint_idx].first);
+    transform.translation().y() = -(0.5 * IMAGE_WIDTH_IN_PIXELS - pixel_waypoints_x_y_[waypoint_idx].second);
 
+    std::cout << "x1: " << transform.translation().x() << std::endl;
+    std::cout << "y1: " << transform.translation().y() << std::endl;
+
+    // Rotate to match WAYPOINT_FRAME_ID axes
     transform = mirror * net_rotation_from_pixel_to_world * transform;
 
-    target_pose.pose.position.x = PAINT_PLANE_X_COORDINATE;
-    target_pose.pose.position.y = transform.translation().y();
-    target_pose.pose.position.z = transform.translation().z();
-    target_poses.push_back(target_pose);
+    std::cout << "x2: " << transform.translation().x() << std::endl;
+    std::cout << "y2: " << transform.translation().y() << std::endl;
+    std::cout << "z2: " << transform.translation().z() << std::endl;
 
-    std::cout << "Waypoint (x,y,z) in frame " << WAYPOINT_FRAME_ID << ":  "
-              << target_pose.pose.position.x
-              << "  " << target_pose.pose.position.y
-              << "  " << target_pose.pose.position.z
-              << std::endl;
+    // X (depth) is constant
+    transform.translation().x() = PAINT_PLANE_X_COORDINATE;
+
+    // Scale
+    transform.translation().y() *= PIXEL_TO_WORLD_SCALE;
+    transform.translation().z() *= PIXEL_TO_WORLD_SCALE;
+
+    std::cout << "x3: " << transform.translation().x() << std::endl;
+    std::cout << "y3: " << transform.translation().y() << std::endl;
+    std::cout << "z3: " << transform.translation().z() << std::endl;
+
+    // Translate, since origin is at the base of the robot
+    transform.translation().z() += HEIGHT_TO_WORKSPACE_CENTER;
+
+    std::cout << "x4: " << transform.translation().x() << std::endl;
+    std::cout << "y4: " << transform.translation().y() << std::endl;
+    std::cout << "z4: " << transform.translation().z() << std::endl;
+    std::cout << " -- " << std::endl;
   }
 
   return target_poses;
